@@ -7,18 +7,19 @@ import org.scalatest.mockito.MockitoSugar
 
 class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
     "Bytes in" should "be bytes out" in {
-        val serversocket = mock[ServerSocket]
+        val serverSocket = mock[ServerSocket]
         val socket = mock[Socket]
-        val bytearrayinputstream = new ByteArrayInputStream("This is a test".getBytes())
-        val bytearrayoutputstream = new ByteArrayOutputStream()
+        val byteArrayInputStream = new ByteArrayInputStream("This is a test".getBytes())
+        val byteArrayOutputStream = new ByteArrayOutputStream()
 
-        when(serversocket.accept()).thenReturn(socket)
-        when(socket.getInputStream).thenReturn(bytearrayinputstream)
-        when(socket.getOutputStream).thenReturn(bytearrayoutputstream)
+        when(serverSocket.accept()).thenReturn(socket)
+        when(socket.getInputStream).thenReturn(byteArrayInputStream)
+        when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serversocket)
+        WebServer.serve(serverSocket)
 
-        bytearrayoutputstream.toString() should be("This is a test")
+        byteArrayOutputStream.toString() should be("This is a test")
+
         verify(socket).close()
     }
 
