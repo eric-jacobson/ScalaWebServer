@@ -1,38 +1,50 @@
-import java.io.{BufferedReader, BufferedWriter, ByteArrayInputStream, ByteArrayOutputStream}
+import java.io._
 import java.net._
+import scala.io._
 
 import org.scalatest._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 
+import scala.io.Source
+
 class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
-    "Bytes in" should "be bytes out" in {
-        val serversocket = mock[ServerSocket]
+
+    "ServerResponse valid file" should "be 200 Ok" in {
+        val serverSocket = mock[ServerSocket]
         val socket = mock[Socket]
-        val bytearrayinputstream = new ByteArrayInputStream("This is a test".getBytes())
-        val bytearrayoutputstream = new ByteArrayOutputStream()
+        val byteArrayInputStream = new ByteArrayInputStream("GET / HTTP/1.1".getBytes())
+        val byteArrayOutputStream = new ByteArrayOutputStream()
+        val fileName = "./index.html"
 
-        when(serversocket.accept()).thenReturn(socket)
-        when(socket.getInputStream).thenReturn(bytearrayinputstream)
-        when(socket.getOutputStream).thenReturn(bytearrayoutputstream)
+        when(serverSocket.accept()).thenReturn(socket)
+        when(socket.getInputStream).thenReturn(byteArrayInputStream)
+        when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serversocket)
+        WebServer.serve(serverSocket, fileName)
 
-        bytearrayoutputstream.toString() should be("This is a test")
+        byteArrayOutputStream.toString() should be("HTTP/1.1 200 Ok\r\n" + "Content-Type=text/html\r\n" + "\r\n"
+                                                    + Source.fromFile("./index.html").mkString)
+
         verify(socket).close()
     }
 
-    "Read and write" should "echo" in {
-        val in = mock[BufferedReader]
-        val out = mock[BufferedWriter]
+    "ServerResponse invalid file" should "be 404 Not Found" in {
+        val serverSocket = mock[ServerSocket]
+        val socket = mock[Socket]
+        val byteArrayInputStream = new ByteArrayInputStream("GET / HTTP/1.1".getBytes())
+        val byteArrayOutputStream = new ByteArrayOutputStream()
+        val fileName = "./hello.html"
 
-        when(in.readLine()).thenReturn("This is a test")
+        when(serverSocket.accept()).thenReturn(socket)
+        when(socket.getInputStream).thenReturn(byteArrayInputStream)
+        when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.read_and_write(in, out)
+        WebServer.serve(serverSocket, fileName)
 
-        verify(out).write("This is a test")
-        verify(out).flush()
-        verify(out).close()
-        verify(in).close()
+        byteArrayOutputStream.toString() should be("HTTP/1.1 404 Not Found\r\n" + "Content-Type=text/html\r\n" + "\r\n"
+                                                    + Source.fromFile("./404.html").mkString)
+
+        verify(socket).close()
     }
 }
