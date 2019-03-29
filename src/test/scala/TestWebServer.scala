@@ -10,21 +10,38 @@ import scala.io.Source
 
 class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
 
-    "ServerResponse valid file" should "be 200 Ok" in {
+    "ServerResponse root file" should "be 200 Ok" in {
         val serverSocket = mock[ServerSocket]
         val socket = mock[Socket]
         val byteArrayInputStream = new ByteArrayInputStream("GET / HTTP/1.1".getBytes())
         val byteArrayOutputStream = new ByteArrayOutputStream()
-        val fileName = "./index.html"
 
         when(serverSocket.accept()).thenReturn(socket)
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serverSocket, fileName)
+        WebServer.serve(serverSocket)
 
-        byteArrayOutputStream.toString() should be("HTTP/1.1 200 Ok\r\n" + "Content-Type=text/html\r\n" + "\r\n"
+        byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./index.html").mkString)
+
+        verify(socket).close()
+    }
+
+    "ServerResponse valid file" should "be 200 Ok" in {
+        val serverSocket = mock[ServerSocket]
+        val socket = mock[Socket]
+        val byteArrayInputStream = new ByteArrayInputStream("GET /helloworld HTTP/1.1".getBytes())
+        val byteArrayOutputStream = new ByteArrayOutputStream()
+
+        when(serverSocket.accept()).thenReturn(socket)
+        when(socket.getInputStream).thenReturn(byteArrayInputStream)
+        when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
+
+        WebServer.serve(serverSocket)
+
+        byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
+                                                    + Source.fromFile("./helloworld.html").mkString)
 
         verify(socket).close()
     }
@@ -32,17 +49,16 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
     "ServerResponse invalid file" should "be 404 Not Found" in {
         val serverSocket = mock[ServerSocket]
         val socket = mock[Socket]
-        val byteArrayInputStream = new ByteArrayInputStream("GET / HTTP/1.1".getBytes())
+        val byteArrayInputStream = new ByteArrayInputStream("GET /abc HTTP/1.1".getBytes())
         val byteArrayOutputStream = new ByteArrayOutputStream()
-        val fileName = "./hello.html"
 
         when(serverSocket.accept()).thenReturn(socket)
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serverSocket, fileName)
+        WebServer.serve(serverSocket)
 
-        byteArrayOutputStream.toString() should be("HTTP/1.1 404 Not Found\r\n" + "Content-Type=text/html\r\n" + "\r\n"
+        byteArrayOutputStream.toString() should be("HTTP/1.1 404\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./404.html").mkString)
 
         verify(socket).close()
