@@ -8,55 +8,53 @@ object WebServer {
         val server = new ServerSocket(9999)
         println("Server Running...\nGo to: http://localhost:9999")
         while(true) {
-            println("Enter file name: ")
-            val fileName = StdIn.readLine()
-            serve(server, fileName)
+            serve(server)
         }
     }
 
-    def serverResponse(in: String, out:BufferedWriter, fileName: String): Unit = {
+    def serverResponse(in: String, out:BufferedWriter): Unit = {
         val responseArray = in.split(" ")
-        val file = new File("./" + fileName)
-        if(file.exists()){
-            out.write(s"${responseArray(2)} 200 Ok\r\n")
-            out.write("Content-Type=text/html\r\n")
-            out.write("\r\n")
-            out.write(Source.fromFile(file).mkString)
+        val filePath = new File("." + s"${responseArray(1)}" + ".html")
 
-        } else {
-            out.write(s"${responseArray(2)} 404 Not Found\r\n")
+        println(s"${responseArray(0)} ${responseArray(1)} ${responseArray(2)}\r\n")
+
+        if (responseArray(1).equals("/")) {
+            val file = Source.fromFile("index.html")
+            out.write(s"${responseArray(2)} 200\r\n")
             out.write("Content-Type=text/html\r\n")
             out.write("\r\n")
-            out.write(Source.fromFile("./404.html").mkString)
+            out.write(file.mkString)
+        } else if(!filePath.exists()){
+            val file = Source.fromFile("404.html")
+            out.write(s"${responseArray(2)} 404\r\n")
+            out.write("Content-Type=text/html\r\n")
+            out.write("\r\n")
+            out.write(file.mkString)
+        } else {
+            val file = Source.fromFile("." + s"${responseArray(1)}" + ".html")
+            out.write(s"${responseArray(2)} 200\r\n")
+            out.write("Content-Type=text/html\r\n")
+            out.write("\r\n")
+            out.write(file.mkString)
         }
     }
 
-    def read_and_write(in: BufferedReader, out:BufferedWriter, file: String): Unit = {
+    def read_and_write(in: BufferedReader, out:BufferedWriter): Unit = {
         val content = in.readLine()
-        val responseArray = content.split(" ")
-        val fileName = file
 
-        if (responseArray(0).equals("GET") && responseArray(1).equals("/")) {
-            //println(s"${responseArray(0)} ${responseArray(1)} ${responseArray(2)}\r\n")
-            serverResponse(content, out, fileName)
-        }
-        else {
-            println("Something has gone very wrong!")
-            //System.exit(1)
-        }
+        serverResponse(content, out)
 
         out.flush()
         in.close()
         out.close()
     }
 
-    def serve(server: ServerSocket, file: String): Unit = {
-        val fileName = file
+    def serve(server: ServerSocket): Unit = {
         val s = server.accept()
         val in = new BufferedReader(new InputStreamReader(s.getInputStream))
         val out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream))
 
-        read_and_write(in, out, fileName)
+        read_and_write(in, out)
 
         s.close()
     }
