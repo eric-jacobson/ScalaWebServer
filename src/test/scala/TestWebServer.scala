@@ -20,7 +20,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serverSocket)
+        WebServer.serve(socket)
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./index.html").mkString)
@@ -38,7 +38,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serverSocket)
+        WebServer.serve(socket)
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./helloworld.html").mkString)
@@ -56,7 +56,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(serverSocket)
+        WebServer.serve(socket)
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 404\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./404.html").mkString)

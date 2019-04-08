@@ -1,5 +1,8 @@
 import java.net._
 import java.io._
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io._
 
 object WebServer {
@@ -7,12 +10,15 @@ object WebServer {
     def main(args: Array[String]): Unit = {
         val server = new ServerSocket(9999)
         println("Server Running...\nGo to: http://localhost:9999")
-        while(true) {
-            serve(server)
+        while (true) {
+            val s = server.accept()
+            Future {
+                serve(s)
+            }
         }
     }
 
-    def serverResponse(in: String, out:BufferedWriter): Unit = {
+    def serverResponse(in: String, out: BufferedWriter): Unit = {
         val responseArray = in.split(" ")
         val filePath = new File("." + s"${responseArray(1)}" + ".html")
 
@@ -24,7 +30,7 @@ object WebServer {
             out.write("Content-Type=text/html\r\n")
             out.write("\r\n")
             out.write(file.mkString)
-        } else if(!filePath.exists()){
+        } else if (!filePath.exists()) {
             val file = Source.fromFile("404.html")
             out.write(s"${responseArray(2)} 404\r\n")
             out.write("Content-Type=text/html\r\n")
@@ -39,23 +45,18 @@ object WebServer {
         }
     }
 
-    def read_and_write(in: BufferedReader, out:BufferedWriter): Unit = {
+    def read_and_write(in: BufferedReader, out: BufferedWriter): Unit = {
         val content = in.readLine()
-
         serverResponse(content, out)
-
         out.flush()
         in.close()
         out.close()
     }
 
-    def serve(server: ServerSocket): Unit = {
-        val s = server.accept()
-        val in = new BufferedReader(new InputStreamReader(s.getInputStream))
-        val out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream))
-
+    def serve(server: Socket): Unit = {
+        val in = new BufferedReader(new InputStreamReader(server.getInputStream))
+        val out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream))
         read_and_write(in, out)
-
-        s.close()
+        server.close()
     }
 }
