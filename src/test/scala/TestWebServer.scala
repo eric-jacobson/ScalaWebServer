@@ -1,7 +1,9 @@
 import java.io._
 import java.net._
-import scala.io._
 
+import akka.actor.ActorRef
+
+import scala.io._
 import org.scalatest._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
@@ -13,6 +15,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
     "ServerResponse root file" should "be 200 Ok" in {
         val serverSocket = mock[ServerSocket]
         val socket = mock[Socket]
+        val actorRef = mock[ActorRef]
         val byteArrayInputStream = new ByteArrayInputStream("GET / HTTP/1.1".getBytes())
         val byteArrayOutputStream = new ByteArrayOutputStream()
 
@@ -20,7 +23,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(socket)
+
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./index.html").mkString)
@@ -38,7 +41,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(socket)
+        //WebServer.serve(socket)
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 200\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./helloworld.html").mkString)
@@ -56,7 +59,7 @@ class TestWebServer extends FlatSpec with Matchers with MockitoSugar {
         when(socket.getInputStream).thenReturn(byteArrayInputStream)
         when(socket.getOutputStream).thenReturn(byteArrayOutputStream)
 
-        WebServer.serve(socket)
+        //WebServer.serve(socket)
 
         byteArrayOutputStream.toString() should be("HTTP/1.1 404\r\n" + "Content-Type=text/html\r\n" + "\r\n"
                                                     + Source.fromFile("./404.html").mkString)

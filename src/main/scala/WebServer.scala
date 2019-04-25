@@ -1,21 +1,51 @@
 import java.net._
 import java.io._
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io._
 
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+
 object WebServer {
+
+    import Server._
+
+    val system: ActorSystem = ActorSystem("WebServer")
+    val myServer: ActorRef = system.actorOf(Server.props)
 
     def main(args: Array[String]): Unit = {
         val server = new ServerSocket(9999)
         println("Server Running...\nGo to: http://localhost:9999")
         while (true) {
             val s = server.accept()
-            Future {
-                serve(s)
-            }
+            myServer ! MySocket(s)
         }
+    }
+}
+
+object Server {
+    def props: Props = Props[Server]
+
+    final case class MySocket(socket: Socket)
+}
+
+class Server extends Actor {
+
+    import Server._
+
+    def receive: PartialFunction[Any, Unit] = {
+        case MySocket(s) =>
+            val in = new BufferedReader(new InputStreamReader(s.getInputStream))
+            val out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream))
+            read_and_write(in, out)
+            s.close()
+    }
+
+    def read_and_write(in: BufferedReader, out: BufferedWriter): Unit = {
+        val content = in.readLine()
+        serverResponse(content, out)
+        out.write(in.readLine())
+        out.flush()
+        in.close()
+        out.close()
     }
 
     def serverResponse(in: String, out: BufferedWriter): Unit = {
@@ -43,20 +73,5 @@ object WebServer {
             out.write("\r\n")
             out.write(file.mkString)
         }
-    }
-
-    def read_and_write(in: BufferedReader, out: BufferedWriter): Unit = {
-        val content = in.readLine()
-        serverResponse(content, out)
-        out.flush()
-        in.close()
-        out.close()
-    }
-
-    def serve(server: Socket): Unit = {
-        val in = new BufferedReader(new InputStreamReader(server.getInputStream))
-        val out = new BufferedWriter(new OutputStreamWriter(server.getOutputStream))
-        read_and_write(in, out)
-        server.close()
     }
 }
